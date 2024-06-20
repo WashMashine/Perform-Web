@@ -317,22 +317,27 @@ a:focus {
 .slider_section .detail-box .btn-box .btn1 {
   display: inline-block;
   padding: 12px 15px;
-  background-color: #5a2a8f;
+  background-color: #0D1425;
   color: #ffffff;
   border-radius: 5px;
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
-  border: 1px solid #5a2a8f;
+  border: 1px solid #000000;
 }
 
 .slider_section .detail-box .btn-box .btn1:hover {
-  color: #ffffff;
+  color: #0D1425;
+  background-image: linear-gradient(to bottom right, #3884ff, #bcd0ff, #458fff);
   -webkit-transform: translateY(-3px);
           transform: translateY(-3px);
 }
 
 .slider_section .img-box img {
   width: 100%;
+}
+
+.slider_section .logo-box img{
+  width: 100%
 }
 
 .slider_section .carousel-indicators {
