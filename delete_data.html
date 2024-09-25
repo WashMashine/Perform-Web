@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Login & Account Deletion</title>
+  <link rel="icon" type="image/png" href="images/favicon-32x32.png">
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+  <link href="css/font-awesome.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+  <link href="css/responsive.css" rel="stylesheet" />
+
+  <!-- Firebase SDK (version 8.x) -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="mb-3">
+      <a href="index.html" class="btn btn-primary">Back to Home</a>
+    </div>
+
+    <h1>Login</h1>
+    <p>Please log in to delete your account.</p>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" class="form-control" id="email" placeholder="Enter email" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Password" required />
+      </div>
+
+      <!-- Error Message Box for Login -->
+      <div id="errorBox" class="alert alert-danger mt-2" style="display:none;"></div>
+
+      <button type="submit" class="btn btn-primary">Login</button>
+      <button type="button" id="logoutButton" class="btn btn-secondary" style="display:none;">Logout</button>
+
+      <!-- Forgot Password Link -->
+      <div class="mt-2">
+        <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+      </div>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotPasswordForm" style="display:none;" class="mt-3">
+      <div class="form-group">
+        <label for="resetEmail">Enter your email to reset your password</label>
+        <input type="email" class="form-control" id="resetEmail" placeholder="Enter your email" required />
+      </div>
+
+      <div id="forgotPasswordSuccessBox" style="display:none; color: #28a745; font-size: 14px; margin-top: 10px;">
+        Password reset email sent! Please check your inbox and spam folder. If you don’t receive it, the email may not be associated with an account. For further assistance, contact us at contact@xperform.app.
+      </div>
+
+      <!-- Error Message Box for Forgot Password -->
+      <div id="forgotPasswordErrorBox" class="alert alert-danger mt-2" style="display:none;"></div>
+
+      <button type="submit" class="btn btn-primary">Send Reset Email</button>
+      <button type="button" class="btn btn-secondary" id="backToLogin">Back to Login</button>
+    </form>
+
+    <!-- Account Deletion Section -->
+    <div id="accountSection" style="display: none;">
+      <h1 class="mt-5">Delete Account</h1>
+      <p>Delete your account and all related data permanently.</p>
+      <p><strong>Note:</strong> Once deleted, your data cannot be recovered.</p>
+      <button id="deleteAccountButton" class="btn btn-danger">Delete Account</button>
+
+      <div id="loadingSpinner" style="display: none;">
+        <p>Your account is being deleted, please wait...</p>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <a href="index.html" class="btn btn-primary">Back to Home</a>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="js/jquery-3.4.1.min.js"></script>
+  <script src="js/bootstrap.js"></script>
+
+  <script>
+    // Firebase configuration (use v8.x syntax)
+    var firebaseConfig = {
+      apiKey: "AIzaSyAPcJDSoF9kt5EFOwYhMb4S9jryxWz0IBo",
+      authDomain: "perform-3db11.firebaseapp.com",
+      projectId: "perform-3db11",
+      storageBucket: "perform-3db11.appspot.com",
+      messagingSenderId: "686611415655",
+      appId: "1:686611415655:web:05fd6fb7d536f491ab0ac2"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+
+    // DOM elements
+    var loginForm = document.getElementById('loginForm');
+    var logoutButton = document.getElementById('logoutButton');
+    var accountSection = document.getElementById('accountSection');
+    var deleteAccountButton = document.getElementById('deleteAccountButton');
+    var loadingSpinner = document.getElementById('loadingSpinner');
+    var forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    var forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    var backToLoginButton = document.getElementById('backToLogin');
+    var errorBox = document.getElementById('errorBox');
+    var forgotPasswordErrorBox = document.getElementById('forgotPasswordErrorBox');
+
+    // Clear any errors on input change
+    document.querySelectorAll('input').forEach(function(input) {
+      input.addEventListener('input', function() {
+        errorBox.style.display = 'none';
+        forgotPasswordErrorBox.style.display = 'none';
+      });
+    });
+
+    // Check if user is already logged in
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        accountSection.style.display = 'block';
+        loginForm.style.display = 'none';
+        logoutButton.style.display = 'block';
+        forgotPasswordForm.style.display = 'none';
+      } else {
+        accountSection.style.display = 'none';
+        loginForm.style.display = 'block';
+        logoutButton.style.display = 'none';
+      }
+    });
+
+    // Login Form Submission
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(function(userCredential) {
+          console.log('User signed in:', userCredential.user);
+          errorBox.style.display = 'none'; // Clear error box if successful
+        })
+        .catch(function(error) {
+          console.error('Error signing in:', error);
+          // Display error in the error box
+          errorBox.style.display = 'block';
+          errorBox.innerText = 'Error: ' + error.message;
+        });
+    });
+
+    // Logout button
+    logoutButton.addEventListener('click', function() {
+      auth.signOut().then(function() {
+        alert('You have logged out.');
+      }).catch(function(error) {
+        alert('Error logging out: ' + error.message);
+      });
+    });
+
+    // Delete Account button
+    deleteAccountButton.addEventListener('click', function() {
+      var user = auth.currentUser;
+
+      if (user) {
+        loadingSpinner.style.display = 'block'; // Show loading spinner
+
+        db.collection("users").doc(user.uid).delete().then(function() {
+          user.delete().then(function() {
+            alert("Your account has been deleted.");
+            window.location.href = "index.html"; // Redirect to home
+          }).catch(function(error) {
+            alert("Error deleting account: " + error.message);
+          });
+        }).catch(function(error) {
+          alert("Error deleting user data: " + error.message);
+        });
+      } else {
+        alert("No user is logged in.");
+      }
+    });
+
+    // Forgot Password Link
+    forgotPasswordLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      loginForm.style.display = 'none';
+      forgotPasswordForm.style.display = 'block';
+    });
+
+    // Forgot Password Form Submission
+    forgotPasswordForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  var resetEmail = document.getElementById('resetEmail').value;
+
+  auth.sendPasswordResetEmail(resetEmail)
+    .then(function() {
+      // Hide error box if previously shown
+      forgotPasswordErrorBox.style.display = 'none';
+
+      // Show the success message in green
+      forgotPasswordSuccessBox.style.display = 'block';
+    })
+    .catch(function(error) {
+      console.error('Error sending reset email:', error);
+
+      // Show error in red if there's an issue
+      forgotPasswordErrorBox.style.display = 'block';
+      forgotPasswordErrorBox.innerText = 'Error: ' + error.message;
+
+      // Hide the success message
+      forgotPasswordSuccessBox.style.display = 'none';
+    });
+});
+
+
+
+    // Back to Login Button
+    backToLoginButton.addEventListener('click', function() {
+      forgotPasswordForm.style.display = 'none';
+      loginForm.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
